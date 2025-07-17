@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriTrack - Smart Nutrition Tracking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-leaf nav-icon"></i>
+                <span class="brand-text">NutriTrack</span>
+            </div>
+            <div class="nav-actions">
+                <button class="nav-btn" id="settings-btn" title="Einstellungen">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="nav-btn" id="theme-toggle" title="Theme wechseln">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <div class="welcome-content">
+                    <h1 class="page-title">Heute, <span id="current-date"></span></h1>
+                    <p class="page-subtitle">Verfolge deine Nährstoffaufnahme intelligent und einfach</p>
+                </div>
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-fire"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="calories-consumed">0</div>
+                            <div class="stat-label">Kalorien</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="meals-logged">0</div>
+                            <div class="stat-label">Mahlzeiten</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="daily-progress">0%</div>
+                            <div class="stat-label">Tagesziel</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Chart and Actions Section -->
+            <section class="dashboard-section">
+                <div class="dashboard-grid">
+                    <!-- Nutrition Chart -->
+                    <div class="chart-card card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chart-doughnut"></i>
+                                Nährstoff-Übersicht
+                            </h2>
+                            <div class="chart-controls">
+                                <button class="chart-btn active" data-chart="nutrients">Nährstoffe</button>
+                                <button class="chart-btn" data-chart="calories">Kalorien</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="nutrition-chart"></canvas>
+                            </div>
+                            <div class="chart-legend" id="chart-legend"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="actions-card card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-plus-circle"></i>
+                                Schnellaktionen
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="action-buttons">
+                                <button class="action-btn primary" data-modal="daily-entry-modal">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Mahlzeit hinzufügen</span>
+                                </button>
+                                <button class="action-btn secondary" data-modal="fdc-modal">
+                                    <i class="fas fa-database"></i>
+                                    <span>FDC Lebensmittel</span>
+                                </button>
+                                <button class="action-btn secondary" data-modal="manual-food-modal">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Manuell hinzufügen</span>
+                                </button>
+                            </div>
+
+                            <!-- Recent Foods -->
+                            <div class="recent-foods">
+                                <h3 class="section-subtitle">Kürzlich verwendet</h3>
+                                <div class="recent-food-list" id="recent-foods">
+                                    <!-- Recent foods will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Detailed Summary Section -->
+            <section class="summary-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Detaillierte Nährstoff-Analyse
+                        </h2>
+                        <div class="summary-controls">
+                            <button class="summary-btn active" data-view="percentage">Prozent</button>
+                            <button class="summary-btn" data-view="absolute">Absolut</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="nutrients-grid" id="nutrients-grid">
+                            <!-- Nutrient cards will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modal-overlay"></div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-cog"></i>
+                    Einstellungen
+                </h2>
+                <button class="modal-close" data-close>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="settings-form">
+                    <div class="form-group">
+                        <label for="age" class="form-label">
+                            <i class="fas fa-birthday-cake"></i>
+                            Alter (Monate)
+                        </label>
+                        <input type="number" id="age" name="age" class="form-input" placeholder="z.B. 24" min="0" max="1200">
+                        <small class="form-hint">Geben Sie Ihr Alter in Monaten an</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="weight" class="form-label">
+                            <i class="fas fa-weight"></i>
+                            Gewicht (kg)
+                        </label>
+                        <input type="number" id="weight" name="weight" class="form-input" placeholder="z.B. 70.5" min="1" max="300" step="0.1">
+                        <small class="form-hint">Geben Sie Ihr aktuelles Gewicht in Kilogramm an</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" data-close>Abbrechen</button>
+                <button class="btn primary" id="save-settings">
+                    <i class="fas fa-save"></i>
+                    Speichern
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Entry Modal -->
+    <div class="modal" id="daily-entry-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-plus-circle"></i>
+                    Neue Mahlzeit hinzufügen
+                </h2>
+                <button class="modal-close" data-close>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="daily-entry-form">
+                    <div class="form-group">
+                        <label for="food-select" class="form-label">
+                            <i class="fas fa-apple-alt"></i>
+                            Lebensmittel
+                        </label>
+                        <div class="select-wrapper">
+                            <select id="food-select" name="food" class="form-select" required>
+                                <option value="">Lebensmittel auswählen...</option>
+                            </select>
+                            <i class="fas fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity" class="form-label">
+                            <i class="fas fa-balance-scale"></i>
+                            Menge (Gramm)
+                        </label>
+                        <input type="number" id="quantity" name="quantity" class="form-input" placeholder="z.B. 100" min="1" max="5000" required>
+                        <small class="form-hint">Geben Sie die Menge in Gramm an</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" data-close>Abbrechen</button>
+                <button class="btn primary" id="save-daily-entry">
+                    <i class="fas fa-plus"></i>
+                    Hinzufügen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FDC Modal -->
+    <div class="modal" id="fdc-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-database"></i>
+                    FDC Lebensmittel hinzufügen
+                </h2>
+                <button class="modal-close" data-close>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="fdc-form">
+                    <div class="form-group">
+                        <label for="fdc-id" class="form-label">
+                            <i class="fas fa-barcode"></i>
+                            FDC ID
+                        </label>
+                        <input type="text" id="fdc-id" name="fdc-id" class="form-input" placeholder="z.B. 169910" required>
+                        <small class="form-hint">
+                            <i class="fas fa-info-circle"></i>
+                            Finden Sie FDC IDs auf <a href="https://fdc.nal.usda.gov/" target="_blank">fdc.nal.usda.gov</a>
+                        </small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" data-close>Abbrechen</button>
+                <button class="btn primary" id="save-fdc">
+                    <i class="fas fa-download"></i>
+                    Importieren
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Food Modal -->
+    <div class="modal" id="manual-food-modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-edit"></i>
+                    Lebensmittel manuell hinzufügen
+                </h2>
+                <button class="modal-close" data-close>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="manual-food-form">
+                    <div class="form-grid">
+                        <div class="form-group span-2">
+                            <label for="food-name" class="form-label">
+                                <i class="fas fa-tag"></i>
+                                Lebensmittel Name
+                            </label>
+                            <input type="text" id="food-name" name="Name" class="form-input" placeholder="z.B. Vollkornbrot" required>
+                        </div>
+
+                        <div class="nutrient-section">
+                            <h3 class="section-subtitle">Makronährstoffe (pro 100g)</h3>
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label for="calories" class="form-label">Kalorien</label>
+                                    <input type="number" id="calories" name="Kalorien" class="form-input" placeholder="250" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="carbs" class="form-label">Kohlenhydrate (g)</label>
+                                    <input type="number" id="carbs" name="Kohlenhydrate" class="form-input" placeholder="45" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="protein" class="form-label">Protein (g)</label>
+                                    <input type="number" id="protein" name="Protein" class="form-input" placeholder="8" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="fat" class="form-label">Fett (g)</label>
+                                    <input type="number" id="fat" name="Fett" class="form-input" placeholder="4" step="0.1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="nutrient-section">
+                            <h3 class="section-subtitle">Mikronährstoffe (pro 100g)</h3>
+                            <div class="form-grid-3">
+                                <div class="form-group">
+                                    <label for="calcium" class="form-label">Kalzium (mg)</label>
+                                    <input type="number" id="calcium" name="Kalzium" class="form-input" placeholder="100" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="vitamin-b12" class="form-label">Vitamin B12 (µg)</label>
+                                    <input type="number" id="vitamin-b12" name="Vitamin_B12" class="form-input" placeholder="2.5" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                    <label for="iron" class="form-label">Eisen (mg)</label>
+                                    <input type="number" id="iron" name="Eisen" class="form-input" placeholder="2" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="iodine" class="form-label">Jod (µg)</label>
+                                    <input type="number" id="iodine" name="Jod" class="form-input" placeholder="10" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="vitamin-c" class="form-label">Vitamin C (mg)</label>
+                                    <input type="number" id="vitamin-c" name="Vitamin_C" class="form-input" placeholder="5" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="zinc" class="form-label">Zink (mg)</label>
+                                    <input type="number" id="zinc" name="Zink" class="form-input" placeholder="1" step="0.1">
+                                </div>
+                                <div class="form-group span-2">
+                                    <label for="pufa" class="form-label">Mehrfach ungesättigte Fettsäuren (g)</label>
+                                    <input type="number" id="pufa" name="Mehrfach_ungesättigte_Fettsäuren" class="form-input" placeholder="0.5" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" data-close>Abbrechen</button>
+                <button class="btn primary" id="save-manual-food">
+                    <i class="fas fa-plus"></i>
+                    Hinzufügen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loading-spinner">
+        <div class="spinner"></div>
+        <p>Lädt...</p>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/static/js/scripts.js"></script>
+</body>
+</html>
